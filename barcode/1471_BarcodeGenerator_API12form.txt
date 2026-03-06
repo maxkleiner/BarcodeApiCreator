@@ -1,0 +1,634 @@
+program APILayer_Barcode12Form;
+
+//{$IFDEF Lazarus}
+//  {$APPTYPE CONSOLE}  ☮ ✞ π 📌  JSON Lang Translate Example  📥 ⚙️ 🖥️ 🌐 🧠 📦  🎯
+//{/$ENDIF}
+//https://apilayer.com/marketplace/image_to_text-api?txn=free&e=Sign%20Up&l=Success&live_demo=show
+//https://blogs.doctranslate.io/2025/05/13/ja/google-translation-api-key-explained-simply-with-examples/
+//https://simplelocalize.io/blog/posts/best-free-translation-tools-for-developers/
+//https://www.autoitscript.com/forum/topic/153314-multipart-file-uploading-using-winhttpwinhttprequest51/
+//https://www.edenai.co/post/top-free-translation-tools-apis-and-open-source-models
+
+const
+  SUSERAgent = 'Mozilla/5.001 (windows; U; NT4.0; en-US; rv:1.0) Gecko/25250101';
+  USERAGENT5 = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'+
+                   ' Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0 '; 
+ 
+  //https://barcodeapi.org/api/' + LowerCase(BarcodeType) + '/' + TIdURI.ParamsEncode(Data);
+  URL_APILAY_BARCODE = 'https://barcodeapi.org/api/%s/%s';
+  URL_APILAY_FACTS = 'https://api.api-ninjas.com/v1/facts';
+  
+  //N_APIKEY = 'our own api key in NINJAAPIKEY.INC';      //change of release to .inc
+  
+  URLIMAGEPATH = 'http://www.kleiner.ch/kleiner/images/uml_buch.jpg';
+  URLIMAGEPATH2 = 'http://www.kleiner.ch/kleiner/patterns_klein.gif';
+  URLIMAGEPATH3 = 'https://breitschtv.wordpress.com/wp-content/uploads/2024/04/scripttest_latin_20240316_133552.jpg?w=768';
+  URLIMAGEPATH4 = 'https://softwareschule.code.blog/wp-content/uploads/2023/12/lima-309157-db-ard4um-tee-barwagen.jpg';
+
+  TESTURL = 'https://graphical.weather.gov/xml/DWMLgen/schema/latest_DWML.txt';
+  TESTURL2 = 'https://maxbox4.wordpress.com/2024/03/06/geocoding-iv/';
+  TESTSTRING = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=ja&q=bonjour';        
+
+
+//https://jsonplaceholder.typicode.com/guide/
+
+procedure TForm1ExportCreateResource_API_Post(Sender: TObject);
+var httpreq: THttpRequestC; 
+    JSONStr: string;
+  begin
+     httpreq:= THttpRequestC.create(self);
+     httpreq.headers.add('Content-type: application/json; charset=UTF-8');
+     try
+       //JSONStr:= GeoJSON.Stringify; //ToJSON;
+       JSONStr:= '{' +
+       '"title": "gpt-3.6-turbo-instruct",'+
+       //'"prompt": "%s",'+
+       '"body": "gpt-3.6-bar",'+
+       '"userId": 1'+            
+       '}';
+
+       Memo2.Lines.Add('Post JSON created: ' + JSONStr);
+       try
+         writeln(formatJson(JSONStr));
+       except
+         write('JSON FormatError: '+ExceptiontoString(exceptiontype,exceptionparam)); 
+       end;  
+       if httpreq.Post2('https://jsonplaceholder.typicode.com/posts/',JSONStr) then begin
+         Memo2.Lines.Add('API Response: '+formatJson(httpreq.Response.contentasstring));
+         writ('content-length:'+itoa(httpreq.response.Contentlength));
+       end;
+     except
+     //on E: Exception do
+       write('REQC_Err: '+ExceptiontoString(exceptiontype,exceptionparam));   
+     finally
+       httpreq.Free;  //THttpRequestC; 
+     end;  
+  end;
+
+function APIBarcode2(AURL, atype, url_name, afile: string): boolean;
+var httpq: THttpConnectionWinInet;
+    rets: TMemoryStream;  
+    heads: TStrings; iht: IHttpConnection; //losthost:THTTPConnectionLostEvent;
+begin
+  httpq:= THttpConnectionWinInet.Create(true); 
+  rets:= TMemoryStream.create;
+  //heads:= TStringlist.create;     
+  try 
+    //heads.add('Accept=image/jpg');
+    writ(Format(AURL,[urlencode(atype),urlencode(url_name)]))
+    //iht:= httpq.setHeaders(heads);
+    httpq.Get(Format(AURL,[urlencode(atype),urlencode(url_name)]), rets);
+    if httpq.getresponsecode=200 Then begin
+       rets.Position:= 0;
+        // Add the '.png' extension to the FileName
+       //FileName := ChangeFileExt(FileName, '.png');
+       rets.savetofile(afile);
+       openfile(afile);
+       result:= true;
+     end  
+      else result:='Failed:'+
+             itoa(Httpq.getresponsecode)+Httpq.GetResponseHeader('message');
+  except  
+    writeln('EWI_HTTP: '+ExceptiontoString(exceptiontype,exceptionparam));
+    result:= false;
+  finally
+    httpq:= Nil;
+    //heads.Free;
+    rets.Free;
+  end;                  
+end;                 //}
+
+
+function PyCodeObjectDetect2(imgpath, aAPIKey: string): string;
+begin
+  with TPythonEngine.Create(Nil) do begin
+  //pythonhome:= 'C:\Users\User\AppData\Local\Programs\Python\Python312\';
+  try
+    loadDLL;
+    autofinalize:= false;
+    ExecString('import requests');
+    ExecStr('url= "https://api.api-ninjas.com/v1/objectdetection"'); 
+    ExecStr('image_file_descriptor = open("'+imgpath+'","rb")');  
+    ExecStr('headers= {"X-Api-Key":"'+aAPIKey+'"}'); 
+    ExecStr('files = {"image": image_file_descriptor}  ');
+    ExecStr('r = requests.post(url, headers=headers, files=files)');
+    result:= (EvalStr('r.json()')); 
+  except
+    raiseError;        
+  finally       
+    Free;
+  end; 
+ end;
+end; 
+
+type
+  TForm16 = TForm;
+  var
+    cbb1: TComboBox;
+    ed1: TEdit;
+    btn1: TButton;
+    img1: TImage;
+    lbl1: TLabel;
+    lbl11: TLabel;
+    img11: TImage;
+    procedure btn1Click(Sender: TObject); forward;
+  //private
+    { Private declarations }
+  //public
+    { Public declarations }
+  //end;   anatomie einer zeichenkette
+  
+var
+  Form16: TForm16;  
+  
+  
+procedure {TForm16.}btn1Click(Sender: TObject);
+var Code_Type :string;
+ begin
+   case cbb1.ItemIndex of
+     1: begin
+        Code_Type:='aztec';
+      end;
+     2: begin
+        Code_Type:='codabar';
+      end;
+     3: begin
+        Code_Type:='39';
+      end;
+     4: begin
+        Code_Type:='128';
+      end;
+     5: begin
+        Code_Type:='dm';
+      end;
+      6: begin
+        Code_Type:='8';
+        writ('code 8')
+      end;
+      7: begin
+        Code_Type:='13';
+      end;
+      8: begin
+        Code_Type:='417';
+      end;
+      9: begin
+        Code_Type:='qr';
+      end;
+   end; 
+   begin
+     //if TBarcodeDownloader.DownloadBarcode(Code_Type, ed1.Text, 'gen.png') then
+     if APIBarcode2(URL_APILAY_BARCODE, code_type, ed1.text, exepath+'examples\barcode12.png') then
+     begin
+       if (Code_Type = 'qr') or (code_type = 'dm') or (code_type = 'aztec') then
+         img1.Picture.LoadFromFile(exepath+'examples\barcode12.png')
+       else
+         img11.Picture.LoadFromFile(exepath+'examples\barcode12.png');
+     end else
+     begin
+       ShowMessage('Failed to download the barcode image.');
+     end;
+   end; 
+ end;
+
+
+procedure setBCForm;
+ begin
+ Form16:= TForm16.create(self);
+   with form16 do begin
+     Left:= 0
+     Top:= 0
+     Caption:= 'BarcodeAPI QR-code Creator'
+     ClientHeight:= 169
+     ClientWidth:= 533
+     Color:= clBtnFace
+     Font.Charset:= DEFAULT_CHARSET
+     Font.Color:= clWindowText
+     Font.Height:= -11
+     Font.Name:= 'Tahoma'
+     Font.Style:= []
+     OldCreateOrder:= False
+     PixelsPerInch:= 96
+     show;
+     //TextHeight:= 13
+     img1:= TImage.create(form16)
+     with img1 do begin
+      parent:= form16;
+       Left:= 175
+       Top:= 32
+       Width:= 89
+       Height:= 85
+       Picture.bitmap.LoadFromResourceName(HINSTANCE, 'TASBARCODE'); 
+        Stretch:= True
+     end;
+     lbl1:= TLabel.create(form16)
+     with lbl1 do begin
+      parent:= form16;
+       Left:= 8
+       Top:= 8
+       Width:= 98
+       Height:= 13
+       Caption:= 'Select Barcode Type'
+     end;
+     lbl11:= TLabel.create(form16)
+     with lbl11 do begin
+      parent:= form16;
+       Left:= 8
+       Top:= 65
+       Width:= 93
+       Height:= 13
+       Caption:= 'Write Barcode Text'
+     end;
+     img11:= TImage.create(form16)
+     with img11 do begin
+     parent:= form16;
+       Left:= 278
+       Top:= 32
+       Width:= 235
+       Height:= 85
+       //Picture.Data:= 
+       Picture.bitmap.LoadFromResourceName(HINSTANCE, 'TASBARCODE'); 
+       Stretch:= True
+     end;
+     cbb1:= TComboBox.create(form16)
+     with cbb1 do begin
+      parent:= form16;
+       Left:= 8
+       Top:= 32
+       Width:= 145
+       Height:= 21
+       ItemIndex:= 0
+       TabOrder:= 0
+       Text:= 'Select'
+       Items.add('Select')
+         items.add('Aztec ');
+         items.add('Codabar')
+         items.add('Code39')
+         items.add('Code128')
+         items.add('Data Matrix')
+         items.add('EAN-8')
+         items.add('EAN-13')
+         items.add('PDF-417')
+         items.add('QR Code')
+     end;
+     ed1:= TEdit.create(form16)
+     with ed1 do begin
+      parent:= form16;
+       Left:= 8
+       Top:= 88
+       Width:= 145
+       Height:= 21
+       TabOrder:= 1
+       Text:= 'settexted1'
+     end;
+     btn1:= TButton.create(form16)
+     with btn1 do begin
+      parent:= form16
+       Left:= 8
+       Top:= 118
+       Width:= 145
+       Height:= 40
+       font.size:= 9;
+       Caption:= 'Create Barcode'
+       TabOrder:= 2
+       OnClick:= @btn1Click;
+     end;
+   end;
+end; 
+
+const
+  cFileName = 'fmain.pas';
+
+var validtext, atext: string;  IdDecoderMIME: TIdDecoderMIME;
+    t_latlong: TLatlong;
+
+Begin //@main
+  //FilelessWB2PNG('https://www.pngrepo.com/png/429486/60/digger-excavator-shovel.png');
+  //FilelessWB2PNG('https://wiki.gnome.org/Apps/EyeOfGnome?action=AttachFile&do=get&target=screenshot.png');
+  
+  { backstr:= parseJsonvalue(GEO_to_text_API2_emoji(URL_APILAY_EMO, 'slightly smiling face', 
+                                          N_APIKEY));
+    validtext:= StringReplace( backstr, '\n', CR+LF,[rfReplaceAll]); 
+   
+   writeln(validtext);    // U+1F642 }
+   writeln(#$d83d#$de42);       
+   maxform1.setconsole;
+   
+   //)writeln(GEO_to_text_API2_randimage3(URL_APILAY_IMG, 'nature',
+   //                                  'N_APIKEY', exepath+'randimage022.jpg'));
+   // println(PyCodeObjectDetect2('./randimage01bee.jpg', N_APIKEY)); 
+      sleep(500);   
+   // println(PyCodeObjectDetect2('./randimage012.jpg', N_APIKEY));   
+   { backstr:= HTTPClsComponentAPIDetection2(URL_APILAY_DETECT,'', N_APIKEY,'./randimage022.jpg');
+    println('JSONback '+formatjson2((backstr),3));
+     // } 
+   sleep(200)
+   setdebugcheck(true);
+ 
+   //writ(list_modules(exepath+'maxbox5_14beta80.exe'));  
+   TForm1ExportCreateResource_API_Post(self);
+                                                                   
+  // APIBarcode(URL_APILAY_BARCODE, '128', 'maXbox5', exepath+'examples\barcode2.png');
+  // APIBarcode(URL_APILAY_BARCODE, 'qr', 'maXbox5', exepath+'examples\barcode2qr.png');
+   //FreeTranlate_API_Post(self,TBASE_URcL8);     
+   SetBCForm();                                          
+                                           
+End.
+
+                                        
+Auto Aztec CODABAR Code 128 Code 39 DataMatrix EAN 13 EAN 8 ITF-14 PDF-417 QR Code
+UPC A UPC E More Types
+https://barcodeapi.org/index.html#128
+
+Ref:   case cbb1.ItemIndex of
+    1:
+      begin
+        Code_Type:='aztec';
+      end;
+    2:
+      begin
+        Code_Type:='codabar';
+      end;
+    3:
+      begin
+        Code_Type:='39';
+      end;
+      4:
+      begin
+        Code_Type:='128';
+      end;
+      5:
+      begin
+        Code_Type:='dm';
+      end;
+      6:
+      begin
+        Code_Type:='8';
+      end;
+      7:
+      begin
+        Code_Type:='13';
+      end;
+      8:
+      begin
+        Code_Type:='417';
+      end;
+      9:
+      begin
+        Code_Type:='qr';
+      end;
+
+
+
+https://www.npmjs.com/package/google-translate-api-jp?activeTab=readme 
+     https://www.sljfaq.org/afaq/encodings.html
+     コーディングとデザインの街から友人の皆さんへ
+     https://github.com/ssut/py-googletrans/issues/268
+     https://www.geeksforgeeks.org/python/how-to-make-a-google-translation-api-using-python/
+http://www.rolandmuseum.de/syn_ana.php
+https://www.coderstool.com/unicode-text-converter
+
+
+https://medium.com/@abhay.anand/day-3-linux-commands-you-should-know-65fb849561cc
+https://medium.com/100-days-of-linux/7-fundamental-use-cases-of-netcat-866364eb1742
+https://medium.com/@saravra/how-to-study-cybersecurity-64ee0478e87e
+
+(502) 875 err:20
+EWI_HTTP: Exception: Can not send REST message 
+https://translate.googleapis.com/translate_a/single?client=gtx&dt=t&sl=auto&tl=ja&q=bonjour mes amis da la ville of coding avec design, error: Bad Gateway (502)
+debug: 222- 875 err:21
+debug: 207-The requested header could not be located. 878 err:20
+REQC_Err: Exception: The requested header could not be located.
+
+New in maXbox 5.2.9.198 (September 30, 2025)
+New in maXbox 5.1.4.98 (June 30, 2024)
+New in maXbox 5.1.4.95 (April 17, 2024)
+New in maXbox 5.1.4.90 (March 21, 2024)
+New in maXbox 4.7.6.50 (June 15, 2023)
+New in maXbox 4.7.6.20 (December 15, 2022)
+New in maXbox 4.7.6.10 (November 12, 2021)
+New in maXbox 4.7.5.80 (July 22, 2021)
+New in maXbox 4.7.4.64 (June 14, 2020)
+
+unit uPSI_Jsons;
+{
+jsodn for python php js  kotlin pascal
+  rename TJsonObject to TJsonObject2
+
+}
+interface
+ 
+uses
+   SysUtils
+  ,Classes
+  ,uPSComponent
+  ,uPSRuntime
+  ,uPSCompiler
+  ;
+ 
+type 
+(*----------------------------------------------------------------------------*)
+  TPSImport_Jsons = class(TPSPlugin)
+  public
+    procedure CompileImport1(CompExec: TPSScript); override;
+    procedure ExecImport1(CompExec: TPSScript; const ri: TPSRuntimeClassImporter); override;
+  end;
+ 
+ 
+{ compile-time registration functions }
+procedure SIRegister_TJson(CL: TPSPascalCompiler);
+procedure SIRegister_TJsonObject2(CL: TPSPascalCompiler);
+procedure SIRegister_TJsonPair(CL: TPSPascalCompiler);
+procedure SIRegister_TJsonArray2(CL: TPSPascalCompiler);
+procedure SIRegister_TJsonValue(CL: TPSPascalCompiler);
+procedure SIRegister_TJsonBase(CL: TPSPascalCompiler);
+procedure SIRegister_Jsons(CL: TPSPascalCompiler);
+
+{ run-time registration functions }
+procedure RIRegister_TJson(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJsonObject2(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJsonPair(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJsonArray2(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJsonValue(CL: TPSRuntimeClassImporter);
+procedure RIRegister_TJsonBase(CL: TPSRuntimeClassImporter);
+procedure RIRegister_Jsons(CL: TPSRuntimeClassImporter);
+
+procedure Register;
+
+implementation
+
+
+uses
+   jsonsutilsEx
+  ,Jsons
+  ;
+
+ //type  TJsonObject2  = TJsonObject;
+   //    TJsonArray2 = TJsonArray;
+
+ 
+procedure Register;
+begin
+  RegisterComponents('Pascal Script', [TPSImport_Jsons]);
+end;
+
+(* === compile-time registration functions === *)
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJson(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJsonBase', 'TJson') do
+  with CL.AddClassN(CL.FindClass('TJsonBase'),'TJson') do begin
+    RegisterMethod('Constructor Create');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Parse( JsonString : String)');
+    RegisterMethod('Function Stringify : String');
+    RegisterMethod('Procedure Assign( Source : TJsonBase)');
+    RegisterMethod('Procedure Delete21( const Index : Integer);');
+    RegisterMethod('Procedure Delete22( const Name : String);');
+    RegisterMethod('Procedure Clear');
+    RegisterMethod('Function Get23( const Index : Integer) : TJsonValue;');
+    RegisterMethod('Function Get24( const Name : String) : TJsonValue;');
+    RegisterMethod('Function Put25( const Value : TJsonEmpty) : TJsonValue;');
+    RegisterMethod('Function Put26( const Value : TJsonNull) : TJsonValue;');
+    RegisterMethod('Function Put27( const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Put28( const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Put29( const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Put30( const Value : String) : TJsonValue;');
+    RegisterMethod('Function Put31( const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Put32( const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Put33( const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Function Put34( const Value : TJson) : TJsonValue;');
+    RegisterMethod('Function Putbool( const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Putint( const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Putext( const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Putstr( const Value : String) : TJsonValue;');
+    RegisterMethod('Function Putarr( const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Putobj( const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Putval( const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Function Putjson( const Value : TJson) : TJsonValue;');
+
+    RegisterMethod('Function Put35( const Name : String; const Value : TJsonEmpty) : TJsonValue;');
+    RegisterMethod('Function Put36( const Name : String; const Value : TJsonNull) : TJsonValue;');
+    RegisterMethod('Function Put37( const Name : String; const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Put38( const Name : String; const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Put39( const Name : String; const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Put40( const Name : String; const Value : String) : TJsonValue;');
+    RegisterMethod('Function Put41( const Name : String; const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Put42( const Name : String; const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Put43( const Name : String; const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Function Put44( const Name : String; const Value : TJson) : TJsonValue;');
+    RegisterMethod('Function Put45( const Value : TJsonPair) : TJsonValue;');
+    RegisterProperty('StructType', 'TJsonStructType', iptr);
+    RegisterProperty('JsonObject', 'TJsonObject2', iptr);
+    RegisterProperty('JsonArray', 'TJsonArray2', iptr);
+    RegisterProperty('Count', 'Integer', iptr);
+    RegisterProperty('Values', 'TJsonValue String', iptr);
+    SetDefaultPropery('Values');
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJsonObject2(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJsonBase', 'TJsonObject') do
+  with CL.AddClassN(CL.FindClass('TJsonBase'),'TJsonObject2') do begin
+    RegisterMethod('Constructor Create( AOwner : TJsonBase)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Parse( JsonString : String)');
+    RegisterMethod('Procedure Assign( Source : TJsonBase)');
+    RegisterMethod('Procedure Merge( Addition : TJsonObject2)');
+    RegisterMethod('Function Stringify : String');
+    RegisterMethod('Function Add( const Name : String) : TJsonPair');
+    RegisterMethod('Function Insert( const Index : Integer; const Name : String) : TJsonPair');
+    RegisterMethod('Function Put9( const Name : String; const Value : TJsonEmpty) : TJsonValue;');
+    RegisterMethod('Function Put10( const Name : String; const Value : TJsonNull) : TJsonValue;');
+    RegisterMethod('Function Put11( const Name : String; const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Put12( const Name : String; const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Put13( const Name : String; const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Put14( const Name : String; const Value : String) : TJsonValue;');
+    RegisterMethod('Function Put15( const Name : String; const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Put16( const Name : String; const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Put17( const Name : String; const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Function Put18( const Value : TJsonPair) : TJsonValue;');
+    RegisterMethod('Function Putbool( const Name : String; const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Putint( const Name : String; const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Putext( const Name : String; const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Putstr( const Name : String; const Value : String) : TJsonValue;');
+    RegisterMethod('Function Putarr( const Name : String; const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Putobj( const Name : String; const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Putval( const Name : String; const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Function Putpair( const Value : TJsonPair) : TJsonValue;');
+
+    RegisterMethod('Function Find( const Name : String) : Integer');
+    RegisterMethod('Procedure Delete19( const Index : Integer);');
+    RegisterMethod('Procedure Delete20( const Name : String);');
+    RegisterMethod('Procedure Clear');
+    RegisterProperty('Count', 'Integer', iptr);
+    RegisterProperty('Items', 'TJsonPair Integer', iptr);
+    RegisterProperty('Values', 'TJsonValue String', iptr);
+    SetDefaultPropery('Values');
+    RegisterProperty('AutoAdd', 'Boolean', iptrw);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJsonPair(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJsonBase', 'TJsonPair') do
+  with CL.AddClassN(CL.FindClass('TJsonBase'),'TJsonPair') do begin
+    RegisterMethod('Constructor Create( AOwner : TJsonBase; const AName : String)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Parse( JsonString : String)');
+    RegisterMethod('Function Stringify : String');
+    RegisterMethod('Procedure Assign( Source : TJsonBase)');
+    RegisterProperty('Name', 'String', iptrw);
+    RegisterProperty('Value', 'TJsonValue', iptr);
+  end;
+end;
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_TJsonArray2(CL: TPSPascalCompiler);
+begin
+  //with RegClassS(CL,'TJsonBase', 'TJsonArray2') do
+  with CL.AddClassN(CL.FindClass('TJsonBase'),'TJsonArray2') do begin
+    RegisterMethod('Constructor Create( AOwner : TJsonBase)');
+    RegisterMethod('Procedure Free');
+    RegisterMethod('Procedure Parse( JsonString : String)');
+    RegisterMethod('Function Stringify : String');
+    RegisterMethod('Procedure Assign( Source : TJsonBase)');
+    RegisterMethod('Procedure Merge( Addition : TJsonArray2)');
+    RegisterMethod('Function Add : TJsonValue');
+    RegisterMethod('Function Insert( const Index : Integer) : TJsonValue');
+    RegisterMethod('Function Put0( const Value : TJsonEmpty) : TJsonValue;');
+    RegisterMethod('Function Put1( const Value : TJsonNull) : TJsonValue;');
+    RegisterMethod('Function Put2( const Value : Boolean) : TJsonValue;');
+    RegisterMethod('Function Put3( const Value : Integer) : TJsonValue;');
+    RegisterMethod('Function Put4( const Value : Extended) : TJsonValue;');
+    RegisterMethod('Function Put5( const Value : String) : TJsonValue;');
+    RegisterMethod('Function Put6( const Value : TJsonArray2) : TJsonValue;');
+    RegisterMethod('Function Put7( const Value : TJsonObject2) : TJsonValue;');
+    RegisterMethod('Function Put8( const Value : TJsonValue) : TJsonValue;');
+    RegisterMethod('Procedure Delete( const Index : Integer)');
+    RegisterMethod('Procedure Clear');
+    RegisterProperty('Count', 'Integer', iptr);
+    RegisterProperty('Items', 'TJsonValue Integer', iptr);
+    SetDefaultPropery('Items');
+  end;
+end;
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_Jsons(CL: TPSPascalCompiler);
+begin
+  CL.AddTypeS('TJsonValueType', '( jvNone, jvNull, jvString, jvNumber, jvBoolean, jvObject, jvArray )');
+  CL.AddTypeS('TJsonStructType', '( jsNone, jsArray, jsObject )');
+  CL.AddTypeS('TJsonNull', '( jsnull2 )');
+  CL.AddTypeS('TJsonEmpty', '( jsempty )');
+  SIRegister_TJsonBase(CL);
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJsonObject2');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJsonArray2');
+  SIRegister_TJsonValue(CL);
+  SIRegister_TJsonArray2(CL);
+  SIRegister_TJsonPair(CL);
+  SIRegister_TJsonObject2(CL);
+  SIRegister_TJson(CL);
+end;
