@@ -1,11 +1,13 @@
 # BarcodeApiCreator
-This is a Delphi library for generating barcodes using the https://barcodeapi.org API. The library provides functions to create barcodes of various types, such as QR codes, Aztec codes, Code 39, Code 128, and more. It also allows you to display the generated barcodes in Delphi TImage components.
+This is a Delphi / maXbox library for generating barcodes using the https://barcodeapi.org API. The library provides functions to create barcodes of various types, such as QR codes, Aztec codes, Code 39, Code 128, and more. It also allows you to display the generated barcodes in Delphi TImage components.
 
 ## Features
 Generate barcodes of different types (QR codes, Aztec codes, Code 39, etc.).
-Display the generated barcodes in Delphi TImage components.
+Display the generated barcodes in Delphi / maXbox TImage components.
 Easy-to-use API integration for barcode generation.
 Error handling for network requests and API responses.
+
+<img width="537" height="216" alt="1471_Screenshot2026-03-06190349" src="https://github.com/user-attachments/assets/f1b7d0f7-3548-4ed6-831b-e4bf195136c4" />
 
 ## Getting Started
 Clone this repository or download the source code.
@@ -27,7 +29,7 @@ end;
 ![Barcode Example](https://i.ibb.co/kSTh9Hp/picture.png)
 
 ## Dependencies
-This library relies on the Indy HTTP component for making requests to the https://barcodeapi.org API. Make sure you have Indy components installed and configured in your Delphi environment.
+This library relies on the Indy HTTP component for making requests to the https://barcodeapi.org API. Make sure you have Indy components installed and configured in your Delphi environment. In maXbox we use wininet API.
 
 
 ## License
