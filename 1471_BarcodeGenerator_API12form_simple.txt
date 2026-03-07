@@ -1,0 +1,345 @@
+program APILayer_Barcode12Form_Simple;
+
+//{$IFDEF Lazarus}
+//  {$APPTYPE CONSOLE}  ☮ ✞ π 📌  Barcode Translate Example  📥 ⚙️ 🖥️ 🌐 🧠 📦  🎯
+//{/$ENDIF}
+//https://github.com/maxkleiner/BarcodeApiCreator
+//https://blogs.doctranslate.io/2025/05/13/ja/google-translation-api-key-explained-simply-with-examples/
+//#sign User: DESKTOP-BTLKHKF: 07/03/2026 18:06:54 
+
+const
+  USERAGENT5 = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'+
+                   ' Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0 '; 
+ 
+  //https://barcodeapi.org/api/' + LowerCase(BarcodeType) + '/' + TIdURI.ParamsEncode(Data);
+  URL_APILAY_BARCODE = 'https://barcodeapi.org/api/%s/%s';
+  URL_APILAY_FACTS = 'https://api.api-ninjas.com/v1/facts';
+  
+  TESTURL = 'https://graphical.weather.gov/xml/DWMLgen/schema/latest_DWML.txt';
+  TESTURL2 = 'https://maxbox4.wordpress.com/2024/03/06/geocoding-iv/';
+  TESTSTRING = 'https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=auto&tl=ja&q=bonjour';        
+
+//https://jsonplaceholder.typicode.com/guide/
+
+procedure TForm1ExportCreateResource_API_Post(Sender: TObject);
+var httpreq: THttpRequestC; 
+    JSONStr: string;
+  begin
+     httpreq:= THttpRequestC.create(self);
+     httpreq.headers.add('Content-type: application/json; charset=UTF-8');
+     try
+       //JSONStr:= GeoJSON.Stringify; //ToJSON;
+       JSONStr:= '{' +
+       '"title": "gpt-3.6-turbo-instruct",'+
+       //'"prompt": "%s",'+
+       '"body": "gpt-3.6-bar",'+
+       '"userId": 1'+            
+       '}';
+       Memo2.Lines.Add('Post JSON created: ' + JSONStr);
+       try
+         writeln(formatJson(JSONStr));
+       except
+         write('JSON FormatError: '+ExceptiontoString(exceptiontype,exceptionparam)); 
+       end;  
+       if httpreq.Post2('https://jsonplaceholder.typicode.com/posts/',JSONStr) then begin
+         Memo2.Lines.Add('API Response: '+formatJson(httpreq.Response.contentasstring));
+         writ('content-length:'+itoa(httpreq.response.Contentlength));
+       end;
+     except
+     //on E: Exception do
+       write('REQC_Err: '+ExceptiontoString(exceptiontype,exceptionparam));   
+     finally
+       httpreq.Free;  //THttpRequestC; 
+     end;  
+  end;
+
+function APIBarcode2(AURL, atype, url_name, afile: string): boolean;
+var httpq: THttpConnectionWinInet;
+    rets: TMemoryStream;  
+    heads: TStrings; iht: IHttpConnection; //losthost:THTTPConnectionLostEvent;
+begin
+  httpq:= THttpConnectionWinInet.Create(true); 
+  rets:= TMemoryStream.create;
+  //heads:= TStringlist.create;     
+  try 
+    //heads.add('Accept=image/jpg');
+    writ(Format(AURL,[urlencode(atype),urlencode(url_name)]))
+    //iht:= httpq.setHeaders(heads);
+    httpq.Get(Format(AURL,[urlencode(atype),urlencode(url_name)]), rets);
+    if httpq.getresponsecode=200 Then begin
+       rets.Position:= 0;
+        // Add the '.png' extension to the FileName
+       //FileName := ChangeFileExt(FileName, '.png');
+       rets.savetofile(afile);
+       openfile(afile);
+       result:= true;
+     end  
+      else result:='Failed:'+
+             itoa(Httpq.getresponsecode)+Httpq.GetResponseHeader('message');
+  except  
+    writeln('EWI_HTTP: '+ExceptiontoString(exceptiontype,exceptionparam));
+    result:= false;
+  finally
+    httpq:= Nil;
+    //heads.Free;
+    rets.Free;
+  end;                  
+end;                 //}
+
+function APIBarcode3(AURL,atype,url_name,afile: string): boolean;
+var encodedURL:String; mapStream: TMemoryStream;
+begin
+ encodedURL:= Format(AURL,[urlencode(atype),urlencode(url_name)]);
+  mapStream:= TMemoryStream.create;
+  try
+    Wininet_HttpGet(EncodedURL, mapStream);   //WinInet
+    mapStream.Position:= 0;
+    mapStream.Savetofile(afile); // OpenDoc(apath);
+    result:= true;
+    S_ShellExecute(afile,'',seCmdOpen);
+  except  
+    writeln('HTTPS: '+ExceptiontoString(exceptiontype,exceptionparam));
+    result:= false;  
+  finally
+    mapStream.Free;
+  end;
+end;  
+
+
+function PyCodeObjectDetect2(imgpath, aAPIKey: string): string;
+begin
+  with TPythonEngine.Create(Nil) do begin
+  //pythonhome:= 'C:\Users\User\AppData\Local\Programs\Python\Python312\';
+  try
+    loadDLL;
+    autofinalize:= false;
+    ExecString('import requests');
+    ExecStr('url= "https://api.api-ninjas.com/v1/objectdetection"'); 
+    ExecStr('image_file_descriptor = open("'+imgpath+'","rb")');  
+    ExecStr('headers= {"X-Api-Key":"'+aAPIKey+'"}'); 
+    ExecStr('files = {"image": image_file_descriptor}  ');
+    ExecStr('r = requests.post(url, headers=headers, files=files)');
+    result:= (EvalStr('r.json()')); 
+  except
+    raiseError;        
+  finally       
+    Free;
+  end; 
+ end;
+end; 
+
+type
+  TForm16 = TForm;
+  var
+    cbb1: TComboBox;
+    ed1: TEdit;
+    btn1: TButton;
+    img1: TImage;
+    lbl1: TLabel;
+    lbl11: TLabel;
+    img11: TImage;
+    procedure btn1Click(Sender: TObject); forward;
+  //public
+    { Public declarations }
+  //end;   anatomie einer zeichenkette
+  
+var
+  Form16: TForm16;  
+  
+procedure {TForm16.}btn1Click(Sender: TObject);
+var Code_Type :string;
+ begin
+   case cbb1.ItemIndex of
+     1: begin
+        Code_Type:='aztec';
+      end;
+     2: begin
+        Code_Type:='codabar';
+      end;
+     3: begin
+        Code_Type:='39';
+      end;
+     4: begin
+        Code_Type:='128';
+      end;
+     5: begin
+        Code_Type:='dm';
+      end;
+      6: begin
+        Code_Type:='8';
+        writ('debug code 8')
+      end;
+      7: begin
+        Code_Type:='13';
+      end;
+      8: begin
+        Code_Type:='417';
+      end;
+      9: begin
+        Code_Type:='qr';
+      end;
+   end; 
+   begin
+     //if TBarcodeDownloader.DownloadBarcode(Code_Type, ed1.Text, 'gen.png') then
+     if APIBarcode3(URL_APILAY_BARCODE, code_type, ed1.text, exepath+'examples\barcode12.png') then
+     begin
+       if (Code_Type = 'qr') or (code_type = 'dm') or (code_type = 'aztec') then
+         img1.Picture.LoadFromFile(exepath+'examples\barcode12.png')
+       else
+         img11.Picture.LoadFromFile(exepath+'examples\barcode12.png');
+     end else
+     begin
+       ShowMessage('Failed to download the barcode image.');
+     end;
+   end; 
+ end;
+
+
+procedure setBCForm2;
+ begin
+ Form16:= TForm16.create(self);
+   with form16 do begin
+     Left:= 0; Top:= 0
+     Caption:= 'BarcodeAPI QR-code Creator by maXbox'
+     ClientHeight:= 169
+     ClientWidth:= 583
+     Color:= clBtnFace
+     Font.Charset:= DEFAULT_CHARSET
+     Font.Color:= clWindowText
+     Font.Height:= -11
+     Font.Name:= 'Tahoma'
+     Font.Style:= []
+     formstyle:= fsstayontop;
+     OldCreateOrder:= False
+     PixelsPerInch:= 96
+     show;
+     //TextHeight:= 13
+     img1:= TImage.create(form16)
+     with img1 do begin
+      parent:= form16;
+       setbounds(175, 32, 100, 95)
+       Picture.bitmap.LoadFromResourceName(HINSTANCE, 'TASBARCODE'); 
+        Stretch:= True
+     end;
+     lbl1:= TLabel.create(form16)
+     with lbl1 do begin
+      parent:= form16;
+      setbounds(8, 8, 98, 13)
+      Caption:= 'Select Barcode Type'
+     end;
+     lbl11:= TLabel.create(form16)
+     with lbl11 do begin
+      parent:= form16;
+      setbounds(8, 65, 93, 13)
+      Caption:= 'Write Barcode Text'
+     end;
+     img11:= TImage.create(form16)
+     with img11 do begin
+     parent:= form16;
+     setbounds(300, 32, 250, 95)
+       //Picture.Data:= 
+       Picture.bitmap.LoadFromResourceName(HINSTANCE, 'TASBARCODE'); 
+       Stretch:= True
+     end;
+     cbb1:= TComboBox.create(form16)
+     with cbb1 do begin
+      parent:= form16;
+      setbounds(8, 32, 145, 21)
+       ItemIndex:= 0
+       TabOrder:= 0
+       Text:= 'Select'
+       Items.add('Select')
+         items.add('Aztec ');
+         items.add('Codabar')
+         items.add('Code39')
+         items.add('Code128')
+         items.add('Data Matrix')
+         items.add('EAN-8')
+         items.add('EAN-13')
+         items.add('PDF-417')
+         items.add('QR Code')
+       ItemIndex:= 0  
+     end;
+     ed1:= TEdit.create(form16)
+     with ed1 do begin
+      parent:= form16;
+      setbounds(8, 88, 145, 21)
+       TabOrder:= 1
+       Text:= 'settexted1'
+     end;
+     btn1:= TButton.create(form16)
+     with btn1 do begin
+      parent:= form16
+      setbounds(8,118, 145, 40)
+       font.size:= 8;
+       Caption:= 'Create Barcode..'
+       TabOrder:= 2
+       OnClick:= @btn1Click;
+     end;
+   end;
+end; 
+
+var validtext, atext: string;  IdDecoderMIME: TIdDecoderMIME;
+    t_latlong: TLatlong;
+
+Begin //@main
+  //FilelessWB2PNG('https://www.pngrepo.com/png/429486/60/digger-excavator-shovel.png');
+   writeln(validtext);    // U+1F642 }
+   writeln(#$d83d#$de42);       
+   maxform1.setconsole;
+   sleep(200)
+   setdebugcheck(true);
+   //writ(list_modules(exepath+'maxbox5_14beta80.exe'));  
+   TForm1ExportCreateResource_API_Post(self);
+                                                                   
+  // APIBarcode(URL_APILAY_BARCODE, '128', 'maXbox5', exepath+'examples\barcode2.png');
+  // APIBarcode(URL_APILAY_BARCODE, 'qr', 'maXbox5', exepath+'examples\barcode2qr.png');
+   //FreeTranlate_API_Post(self,TBASE_URcL8);     
+   SetBCForm2();                                          
+                                           
+End.
+
+
+ref: https://github.com/maxkleiner/BarcodeApiCreator
+                                        
+Auto Aztec CODABAR Code 128 Code 39 DataMatrix EAN 13 EAN 8 ITF-14 PDF-417 QR Code
+UPC A UPC E More Types..    
+https://barcodeapi.org/index.html#128
+
+https://www.npmjs.com/package/google-translate-api-jp?activeTab=readme 
+     https://www.sljfaq.org/afaq/encodings.html
+     コーディングとデザインの街から友人の皆さんへ
+     https://github.com/ssut/py-googletrans/issues/268
+     https://www.geeksforgeeks.org/python/how-to-make-a-google-translation-api-using-python/
+http://www.rolandmuseum.de/syn_ana.php
+https://www.coderstool.com/unicode-text-converter
+
+
+New in maXbox 5.2.9.198 (September 30, 2025)
+New in maXbox 5.1.4.98 (June 30, 2024)
+New in maXbox 5.1.4.95 (April 17, 2024)
+New in maXbox 5.1.4.90 (March 21, 2024)
+New in maXbox 4.7.6.50 (June 15, 2023)
+New in maXbox 4.7.6.20 (December 15, 2022)
+New in maXbox 4.7.6.10 (November 12, 2021)
+New in maXbox 4.7.5.80 (July 22, 2021)
+New in maXbox 4.7.4.64 (June 14, 2020)
+
+
+
+(*----------------------------------------------------------------------------*)
+procedure SIRegister_Jsons(CL: TPSPascalCompiler);
+begin
+  CL.AddTypeS('TJsonValueType', '( jvNone, jvNull, jvString, jvNumber, jvBoolean, jvObject, jvArray )');
+  CL.AddTypeS('TJsonStructType', '( jsNone, jsArray, jsObject )');
+  CL.AddTypeS('TJsonNull', '( jsnull2 )');
+  CL.AddTypeS('TJsonEmpty', '( jsempty )');
+  SIRegister_TJsonBase(CL);
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJsonObject2');
+  CL.AddClassN(CL.FindClass('TOBJECT'),'TJsonArray2');
+  SIRegister_TJsonValue(CL);
+  SIRegister_TJsonArray2(CL);
+  SIRegister_TJsonPair(CL);
+  SIRegister_TJsonObject2(CL);
+  SIRegister_TJson(CL);
+end;
