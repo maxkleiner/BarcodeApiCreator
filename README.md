@@ -31,6 +31,7 @@ end;
 ## Dependencies
 This library relies on the Indy HTTP component for making requests to the https://barcodeapi.org API. Make sure you have Indy components installed and configured in your Delphi environment. In maXbox we use wininet API.
 
+<img width="587" height="222" alt="1471_BarcodeAPIScreenshot2026-03-07111015" src="https://github.com/user-attachments/assets/d775f20e-168d-49a3-a94f-aa9dc365a41e" />
 
 ## License
 This library is open source and released under the MIT License. You are free to use, modify, and distribute it as needed. Please check the LICENSE file for more details.
